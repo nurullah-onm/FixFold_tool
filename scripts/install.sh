@@ -60,6 +60,9 @@ cd "$BACKEND_DIR"
 npm install
 npx prisma generate
 
+# Ensure DATABASE_URL is set (SQLite default)
+export DATABASE_URL=${DATABASE_URL:-"file:./dev.db"}
+
 green "Running database migration..."
 if ! npx prisma migrate deploy; then
   yellow "migrate deploy failed, trying prisma db push..."
