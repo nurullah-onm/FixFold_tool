@@ -15,6 +15,7 @@ BACKEND_DIR="$ROOT_DIR/backend"
 FRONTEND_DIR="$ROOT_DIR/frontend"
 REPO_URL="https://github.com/nurullah-onm/FixFold_tool.git"
 
+# If script is downloaded alone (no repo), clone to temp
 if [ ! -d "$BACKEND_DIR" ] || [ ! -d "$FRONTEND_DIR" ]; then
   green "Repo klasörü bulunamadı, klonlanıyor..."
   WORKDIR="$(mktemp -d)"
