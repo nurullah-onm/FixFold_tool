@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+green() { printf "\033[32m%s\033[0m\n" "$1"; }
+yellow() { printf "\033[33m%s\033[0m\n" "$1"; }
+red() { printf "\033[31m%s\033[0m\n" "$1"; }
+
 # One-shot installer for FixFold (Ubuntu/Debian)
-# Usage: bash <(curl -Ls https://your-repo-url/scripts/install.sh)
+# Usage: bash <(curl -Ls https://raw.githubusercontent.com/nurullah-onm/FixFold_tool/main/scripts/install.sh)
 
 SCRIPT_SOURCE="${BASH_SOURCE[0]:-$0}"
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
@@ -19,10 +23,6 @@ if [ ! -d "$BACKEND_DIR" ] || [ ! -d "$FRONTEND_DIR" ]; then
   BACKEND_DIR="$ROOT_DIR/backend"
   FRONTEND_DIR="$ROOT_DIR/frontend"
 fi
-
-green() { printf "\\033[32m%s\\033[0m\\n" "$1"; }
-yellow() { printf "\\033[33m%s\\033[0m\\n" "$1"; }
-red() { printf "\\033[31m%s\\033[0m\\n" "$1"; }
 
 if [ "$(id -u)" -ne 0 ]; then
   red "Please run as root (sudo)."
