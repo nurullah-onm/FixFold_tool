@@ -1,0 +1,283 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+  VIEWER
+}
+
+model User {
+  id           Int             @id @default(autoincrement())
+  username     String          @unique
+  email        String          @unique
+  passwordHash String
+  role         Role            @default(USER)
+  isActive     Boolean         @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  tokens       RefreshToken[]
+  inbounds     Inbound[]
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+}
+
+enum Protocol {
+  VMESS
+  VLESS
+  TROJAN
+  SHADOWSOCKS
+  DOKODEMO
+  SOCKS
+  HTTP
+  WIREGUARD
+}
+
+enum Network {
+  TCP
+  WS
+  GRPC
+  HTTP2
+  QUIC
+  KCP
+}
+
+enum Security {
+  NONE
+  TLS
+  REALITY
+}
+
+enum ServerType {
+  MASTER
+  SLAVE
+}
+
+enum ServerStatus {
+  ONLINE
+  OFFLINE
+  WARNING
+  ERROR
+}
+
+model Inbound {
+  id              String     @id @default(cuid())
+  userId          Int
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  remark          String
+  protocol        Protocol
+  port            Int        @unique
+  listen          String     @default("0.0.0.0")
+  tag             String     @unique
+  settings        Json
+  network         Network    @default(TCP)
+  security        Security   @default(NONE)
+  streamSettings  Json
+  tlsSettings     Json?
+  realitySettings Json?
+  sniffing        Json?
+  allocate        Json?
+  isActive        Boolean    @default(true)
+  up              BigInt     @default(0)
+  down            BigInt     @default(0)
+  clients         Client[]
+  servers         ServerInbound[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([userId])
+  @@index([protocol])
+  @@index([port])
+}
+
+model XrayConfig {
+  id        String   @id @default(cuid())
+  log       Json
+  api       Json
+  inbounds  Json
+  outbounds Json
+  routing   Json
+  dns       Json?
+  policy    Json?
+  stats     Json?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id         String   @id @default(cuid())
+  inboundId  String
+  inbound    Inbound  @relation(fields: [inboundId], references: [id], onDelete: Cascade)
+
+  email      String
+  uuid       String?
+  password   String?
+  flow       String?
+
+  totalGB    BigInt   @default(0)
+  expiryTime DateTime?
+  limitIp    Int      @default(0)
+
+  up         BigInt   @default(0)
+  down       BigInt   @default(0)
+
+  enable     Boolean  @default(true)
+  tgId       String?
+  subId      String   @unique @default(cuid())
+  reset      Int      @default(0)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([inboundId, email])
+  @@index([inboundId])
+  @@index([email])
+  @@index([subId])
+  @@index([expiryTime])
+  trafficSnapshots TrafficSnapshot[]
+  anomalies        Anomaly[]
+  servers         ServerClient[]
+}
+
+model TrafficSnapshot {
+  id              String   @id @default(cuid())
+  clientId        String
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  timestamp       DateTime @default(now())
+  upRate          Float
+  downRate        Float
+  totalRate       Float
+  connectionCount Int
+
+  @@index([clientId, timestamp])
+}
+
+enum AnomalyType {
+  SPIKE
+  DDOS
+  UNUSUAL_TIME
+  SUSTAINED_HIGH
+  RAPID_RECONNECT
+}
+
+enum AnomalySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Anomaly {
+  id          String          @id @default(cuid())
+  clientId    String
+  client      Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  type        AnomalyType
+  severity    AnomalySeverity
+  score       Float
+  description String
+  detectedAt  DateTime        @default(now())
+  metrics     Json
+  resolved    Boolean         @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  notes       String?
+
+  @@index([clientId, detectedAt])
+  @@index([severity])
+  @@index([resolved])
+}
+
+model AIModel {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  version     String
+  modelPath   String
+  trainedAt   DateTime @default(now())
+  accuracy    Float
+  sampleCount Int
+  isActive    Boolean  @default(true)
+  config      Json
+}
+
+model Server {
+  id             String       @id @default(cuid())
+  name           String       @unique
+  hostname       String
+  port           Int          @default(443)
+  type           ServerType
+  apiKey         String       @unique
+  apiSecret      String
+  status         ServerStatus @default(OFFLINE)
+  lastHeartbeat  DateTime?
+  version        String?
+  maxClients     Int          @default(1000)
+  currentClients Int          @default(0)
+  cpuUsage       Float        @default(0)
+  ramUsage       Float        @default(0)
+  diskUsage      Float        @default(0)
+  networkLoad    Float        @default(0)
+  country        String?
+  city           String?
+  latitude       Float?
+  longitude      Float?
+  totalUp        BigInt       @default(0)
+  totalDown      BigInt       @default(0)
+  lastSyncAt     DateTime?
+  configVersion  String?
+  responseTime   Int?
+  uptime         Int?
+  inbounds       ServerInbound[]
+  clients        ServerClient[]
+  tags           Json?
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([lastHeartbeat])
+}
+
+model ServerInbound {
+  id        String   @id @default(cuid())
+  serverId  String
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  inboundId String
+  inbound   Inbound  @relation(fields: [inboundId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true)
+  priority  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([serverId, inboundId])
+  @@index([serverId])
+  @@index([inboundId])
+}
+
+model ServerClient {
+  id        String   @id @default(cuid())
+  serverId  String
+  server    Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true)
+  assignedAt DateTime @default(now())
+
+  @@unique([serverId, clientId])
+  @@index([serverId])
+  @@index([clientId])
+}
