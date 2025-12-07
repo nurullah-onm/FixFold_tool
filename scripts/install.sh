@@ -4,9 +4,21 @@ set -euo pipefail
 # One-shot installer for FixFold (Ubuntu/Debian)
 # Usage: bash <(curl -Ls https://your-repo-url/scripts/install.sh)
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+SCRIPT_SOURCE="${BASH_SOURCE[0]:-$0}"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SOURCE")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 BACKEND_DIR="$ROOT_DIR/backend"
 FRONTEND_DIR="$ROOT_DIR/frontend"
+REPO_URL="https://github.com/nurullah-onm/FixFold_tool.git"
+
+if [ ! -d "$BACKEND_DIR" ] || [ ! -d "$FRONTEND_DIR" ]; then
+  green "Repo klasörü bulunamadı, klonlanıyor..."
+  WORKDIR="$(mktemp -d)"
+  git clone "$REPO_URL" "$WORKDIR/FixFold_tool"
+  ROOT_DIR="$WORKDIR/FixFold_tool"
+  BACKEND_DIR="$ROOT_DIR/backend"
+  FRONTEND_DIR="$ROOT_DIR/frontend"
+fi
 
 green() { printf "\\033[32m%s\\033[0m\\n" "$1"; }
 yellow() { printf "\\033[33m%s\\033[0m\\n" "$1"; }
