@@ -102,7 +102,8 @@ const fallbackHealth = {
   tcp: 22,
   udp: 3,
   ipv4: '-',
-  ipv6: 'N/A'
+  ipv6: 'N/A',
+  load: [0, 0, 0]
 };
 
 export default function DashboardPage({ lang = 'tr' }) {
@@ -114,6 +115,8 @@ export default function DashboardPage({ lang = 'tr' }) {
 
   useEffect(() => {
     fetchData();
+    const interval = setInterval(fetchData, 5000); // canlı veri için 5 sn poll
+    return () => clearInterval(interval);
   }, []);
 
   const fetchData = async () => {
@@ -122,7 +125,7 @@ export default function DashboardPage({ lang = 'tr' }) {
       const [h, i, c] = await Promise.all([getHealth().catch(() => ({ data: {} })), getInbounds(), getClients()]);
       const incoming = h.data?.data || h.data || null;
       if (incoming) {
-        setMetrics(incoming);
+        setMetrics({ ...fallbackHealth, ...incoming });
       }
       setHealth(h.data || {});
       setStats({
@@ -136,6 +139,7 @@ export default function DashboardPage({ lang = 'tr' }) {
 
   const h = metrics || fallbackHealth;
   const statusOk = health?.success ?? true;
+  const loadVals = h.load || h.loadAvg || [0, 0, 0];
 
   const topCards = [
     { label: t('cpu'), value: h.cpuPercent, footer: `${t('cores')}: ${h.cores}` },
@@ -196,9 +200,9 @@ export default function DashboardPage({ lang = 'tr' }) {
         <div className="card">
           <div className="muted small">{t('load')}</div>
           <div className="list-item" style={{ marginTop: 8 }}>
-            <span className="tag">0.0</span>
-            <span className="tag">0.0</span>
-            <span className="tag">0.0</span>
+            <span className="tag">{loadVals[0] ?? 0}</span>
+            <span className="tag">{loadVals[1] ?? 0}</span>
+            <span className="tag">{loadVals[2] ?? 0}</span>
           </div>
         </div>
         <div className="card">
