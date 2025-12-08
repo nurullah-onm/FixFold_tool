@@ -120,7 +120,7 @@ const emptyForm = {
   wsHost: '',
   wsPath: '/ws',
   grpcServiceName: '',
-  sockoptTproxy: false,
+  sockoptTproxy: 'off',
   sockoptMark: '',
   externalProxy: '',
   sniffing: true,
@@ -418,9 +418,13 @@ export default function InboundsPage({ lang = 'tr' }) {
             <label>
               {t('sockopt')}
               <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                <label style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <label>
                   TPROXY
-                  <input type="checkbox" checked={form.sockoptTproxy} onChange={(e) => setForm({ ...form, sockoptTproxy: e.target.checked })} />
+                  <select value={form.sockoptTproxy} onChange={(e) => setForm({ ...form, sockoptTproxy: e.target.value })}>
+                    <option value="off">off</option>
+                    <option value="redirect">redirect</option>
+                    <option value="tproxy">tproxy</option>
+                  </select>
                 </label>
                 <input placeholder="mark" value={form.sockoptMark} onChange={(e) => setForm({ ...form, sockoptMark: e.target.value })} />
               </div>

@@ -132,6 +132,9 @@ cat > /etc/x-ui/config.json <<'EOF'
 EOF
 fi
 
+# Normalize tproxy fields (Xray 25+ requires string values)
+sed -i 's/"tproxy"[[:space:]]*:[[:space:]]*true/"tproxy":"redirect"/g; s/"tproxy"[[:space:]]*:[[:space:]]*false/"tproxy":"off"/g' /etc/x-ui/config.json || true
+
 green "Backend bağımlılıkları kuruluyor..."
 cd "$BACKEND_DIR"
 npm install

@@ -26,10 +26,13 @@ const inboundSchema = Joi.object({
       host: Joi.string().allow(''),
       path: Joi.string().allow('')
     }).optional(),
-    sockopt: Joi.object({
-      tproxy: Joi.boolean().optional(),
-      mark: Joi.alternatives(Joi.string(), Joi.number()).allow('').optional()
-    }).optional(),
+      sockopt: Joi.object({
+        tproxy: Joi.alternatives(
+          Joi.string().valid('off', 'redirect', 'tproxy'),
+          Joi.boolean()
+        ).optional(),
+        mark: Joi.alternatives(Joi.string(), Joi.number()).allow('').optional()
+      }).optional(),
     externalProxy: Joi.string().allow('').optional(),
     clients: Joi.array().items(Joi.object().unknown(true)).optional()
   }).unknown(true).required(),

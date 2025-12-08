@@ -309,7 +309,17 @@ class InboundService {
       streamWithSecurity.proxyProtocol = true;
     }
     if (inbound.settings?.sockopt) {
-      streamWithSecurity.sockopt = inbound.settings.sockopt;
+      const sockopt = { ...inbound.settings.sockopt };
+      const normalizeTproxy = (value) => {
+        if (value === true) return 'redirect';
+        if (value === false || value === null || value === undefined) return 'off';
+        if (typeof value === 'string' && ['off', 'redirect', 'tproxy'].includes(value)) return value;
+        return 'off';
+      };
+      if (sockopt.tproxy !== undefined) {
+        sockopt.tproxy = normalizeTproxy(sockopt.tproxy);
+      }
+      streamWithSecurity.sockopt = sockopt;
     }
     // WS/HTTP obfuscation (path/host)
     if (inbound.network === 'WS') {
