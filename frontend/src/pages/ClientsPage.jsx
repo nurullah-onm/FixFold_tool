@@ -4,7 +4,7 @@ import { getClients, getInbounds, createClient } from '../services/api';
 const texts = {
   tr: {
     title: 'Kullanıcılar (Clients)',
-    desc: 'Client, inbound altında tanımlı kullanıcıdır. Email ID olarak kullanılır, trafik limiti (GB) ve inbound seçimiyle oluşturulur.',
+    desc: 'Client, inbound altında tanımlı kullanıcıdır. Email ID olarak kullanılır; trafik limiti (GB) ve inbound seçimiyle oluşturulur.',
     refresh: 'Yenile',
     createTitle: 'Client Oluştur',
     inbound: 'Giriş (Inbound)',
@@ -12,13 +12,13 @@ const texts = {
     email: 'Email / ID',
     limit: 'Trafik limiti (GB, 0 = limitsiz)',
     createBtn: 'Oluştur',
-    listTitle: 'Mevcut Client\'lar',
+    listTitle: "Mevcut Client'lar",
     none: 'Client bulunamadı.',
     created: 'Client oluşturuldu.',
     createFail: 'Client oluşturulamadı',
     listFail: 'Listeler alınamadı'
   },
-  en: {
+ {
     title: 'Clients',
     desc: 'Client is tied to an inbound. Email is the ID; set traffic cap (GB) and choose inbound.',
     refresh: 'Refresh',
