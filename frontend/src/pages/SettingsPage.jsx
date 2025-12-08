@@ -222,7 +222,7 @@ export default function SettingsPage({ lang = 'tr' }) {
           <label>SERVER_ADDRESS
             <input
               value={settings.serverAddress}
-              onChange={(e) => handleChange('serverAddress', e.target.value))}
+              onChange={(e) => handleChange('serverAddress', e.target.value)}
               placeholder="185.7.243.177"
             />
           </label>
