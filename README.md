@@ -1,51 +1,136 @@
 # FixFold
 
-Xray-core yönetimi için Node.js tabanlı kontrol paneli. 3X-UI özelliklerini temel alır; ek olarak AI trafik anomali tespiti, çoklu sunucu yönetimi, akıllı client rotasyonu, blokzincir lisansları ve PWA mobil istemci barındırır.
+EN | TR
 
-## Hızlı Başlangıç
+---
+## EN · Overview
+FixFold is a Node.js (Express) + React panel to manage Xray-core. It includes 3X-UI–style inbound/client controls, multi-server, AI anomaly, Telegram alerts, and installer scripts.
 
+### Main Features
+- Auth (JWT), role-based
+- Inbounds (VMess/VLESS/Trojan/SS), clients, QR/link
+- Xray config/reload, stats
+- Multi-server manager
+- AI anomaly detection
+- Telegram bot (optional)
+- Installer (Node 20, pm2, Xray auto-download)
+
+### Quick Start (One-liner)
 ```bash
-# Tek komut (Ubuntu/Debian, root): backend + frontend + pm2 (Node 20 LTS)
 bash <(curl -Ls https://raw.githubusercontent.com/nurullah-onm/FixFold_tool/main/scripts/install.sh)
+```
+Default admin: `admin / admin1234`  
+Backend: `http://<server-ip>:4000/api/health`  
+Frontend: `http://<server-ip>:4173`
 
-# Manuel kurulum
+### Manual (Dev)
+```bash
 # Backend
 cd backend
 npm install
 npx prisma generate
-npm run prisma:migrate
-npm run dev
+npx prisma migrate deploy   # or npm run prisma:migrate
+npm run dev                 # 4000
 
-# Varsayılan admin (opsiyonel; var olan kullanıcıyı ADMIN yapar)
-# Parola en az 8 karakter olmalıdır; varsayılan admin1234’tür
-SEED_ADMIN_USER=admin SEED_ADMIN_PASS=admin1234 npm run seed:admin
-
-# Frontend (Vite + React)
+# Frontend
 cd ../frontend
 npm install
-npm run dev -- --host
+npm run dev -- --host       # 5173
 ```
 
-- API varsayılanı: `http://<sunucu-ip>:4000`
-- Frontend varsayılanı: `http://<sunucu-ip>:5173` (dev) / `http://<sunucu-ip>:4173` (serve -s dist)
-- VLESS/VMess linkleri için `.env` içinde `SERVER_ADDRESS=<ip/alanadı>` doldurun.
+### Environment (backend/.env)
+```
+DATABASE_URL="file:./dev.db"
+SERVER_ADDRESS=<ip-or-domain>
+PORT=4000
+JWT_SECRET=<random>
+JWT_EXPIRES_IN=1d
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=200
+XRAY_BIN_PATH=/usr/local/bin/xray
+XRAY_CONFIG_PATH=/etc/x-ui/config.json
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+TELEGRAM_ADMIN_IDS=
+```
 
-## Önemli Ortam Değişkenleri (.env)
-- `SERVER_ADDRESS` : Paylaşım linki için IP/alan adı
-- `XRAY_BIN_PATH`, `XRAY_CONFIG_PATH` : Xray binary ve config yolları
-- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_ADMIN_IDS`
-- `RATE_LIMIT_WINDOW_MS`, `RATE_LIMIT_MAX`
-- `REDIS_URL`, `CLOUDFLARE_API_TOKEN`, `CF_ZONE_ID`
+### PM2
+```
+pm2 status
+pm2 restart fixfold-backend fixfold-frontend fixfold-xray
+pm2 logs fixfold-backend --lines 50
+```
 
-## Notlar
-- Inbound/Servers/AI gibi yönetim uçları ADMIN rolü ister. `admin/admin` ile giriş yapın; 403 alırsanız token’ı yenileyin.
-- TLS/Reality seçiyorsanız sertifika/anahtar ve gerekli alanları doldurun, aksi halde 400 veya bağlantı hatası alırsınız.
-- Xray binary/config yoksa `scripts/download-xray.sh` ile indirip `.env` yollarını eşleştirin.
+### Scripts
+- `scripts/install.sh` : one-shot install (Node20, Xray download, pm2)
+- `scripts/download-xray.sh` : fetch latest Xray
+- `scripts/fixfold` or `FixFold` : terminal menu (pm2/log/health)
 
-## Kurulum Scripti (scripts/install.sh)
-- Node 18 + pm2 kurulumu, backend npm install/prisma migrate, admin seed, frontend build, pm2 servisleri (`fixfold-backend`, `fixfold-frontend`) başlatılır.
+---
+## TR · Genel Bakış
+FixFold, Xray-core yönetimi için Node.js (Express) + React tabanlı bir paneldir. 3X-UI benzeri inbound/client yönetimi, çoklu sunucu, AI anomali, Telegram ve kurulum scriptleri içerir.
 
-## Hızlı Test
-1) `npm run dev` (backend) + `npm run dev -- --host` (frontend)
-2) `admin/admin` ile giriş
-3) Inbound oluştururken Güvenlik=NONE seçip boş bir port deneyin; listeye düşüyorsa temel akış çalışıyor demektir. TLS/Reality için ilgili alanları doldurun. 
+### Başlıca Özellikler
+- JWT kimlik doğrulama, rol tabanlı
+- Inbound (VMess/VLESS/Trojan/SS), client, QR/link
+- Xray konfig/reload, istatistik
+- Çoklu sunucu yönetimi
+- AI anomali tespiti
+- Telegram bot (opsiyonel)
+- Kurulum scripti (Node 20, pm2, Xray otomatik)
+
+### Tek Komut Kurulum
+```bash
+bash <(curl -Ls https://raw.githubusercontent.com/nurullah-onm/FixFold_tool/main/scripts/install.sh)
+```
+Varsayılan admin: `admin / admin1234`  
+Backend: `http://<sunucu-ip>:4000/api/health`  
+Frontend: `http://<sunucu-ip>:4173`
+
+### Manuel (Geliştirme)
+```bash
+# Backend
+cd backend
+npm install
+npx prisma generate
+npx prisma migrate deploy   # veya npm run prisma:migrate
+npm run dev                 # 4000
+
+# Frontend
+cd ../frontend
+npm install
+npm run dev -- --host       # 5173
+```
+
+### Ortam Değişkenleri (backend/.env)
+```
+DATABASE_URL="file:./dev.db"
+SERVER_ADDRESS=<ip-veya-alan>
+PORT=4000
+JWT_SECRET=<random>
+JWT_EXPIRES_IN=1d
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=200
+XRAY_BIN_PATH=/usr/local/bin/xray
+XRAY_CONFIG_PATH=/etc/x-ui/config.json
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+TELEGRAM_ADMIN_IDS=
+```
+
+### PM2
+```
+pm2 status
+pm2 restart fixfold-backend fixfold-frontend fixfold-xray
+pm2 logs fixfold-backend --lines 50
+```
+
+### Scriptler
+- `scripts/install.sh` : tek komut kurulum (Node20, Xray indir, pm2)
+- `scripts/download-xray.sh` : Xray indir
+- `scripts/fixfold` veya `FixFold` : terminal menüsü (pm2/log/health)
+
+### Notlar
+- Xray varsayılan API/stats portu: 127.0.0.1:62789
+- Inbound ekledikten sonra config otomatik yazılır ve pm2’de xray reload edilir.
+- Telegram için `TELEGRAM_BOT_TOKEN` boşsa bot devre dışı kalır.
