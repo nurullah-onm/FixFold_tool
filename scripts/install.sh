@@ -93,6 +93,11 @@ pm2 delete fixfold-frontend >/dev/null 2>&1 || true
 pm2 start "serve -s dist -l 4173" --name fixfold-frontend
 pm2 save
 
+# Terminal menüsü için kısayol (FixFold)
+BIN_TARGET="/usr/local/bin/FixFold"
+ln -sf "$ROOT_DIR/scripts/fixfold" "$BIN_TARGET"
+chmod +x "$ROOT_DIR/scripts/fixfold" "$ROOT_DIR/scripts/menu.sh" "$BIN_TARGET"
+
 IP_ADDR=$(hostname -I | awk '{print $1}')
 API_PORT=${API_PORT:-4000}
 green "------------------------------------------------------------------"
