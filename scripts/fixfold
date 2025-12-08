@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Wrapper to launch FixFold terminal menü
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Wrapper to launch FixFold terminal menü (resolves symlinks)
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]:-$0}")"
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Vars: allow override via env

@@ -95,8 +95,10 @@ pm2 save
 
 # Terminal menüsü için kısayol (FixFold)
 BIN_TARGET="/usr/local/bin/FixFold"
+BIN_TARGET2="/usr/local/bin/fixfold"
 ln -sf "$ROOT_DIR/scripts/fixfold" "$BIN_TARGET"
-chmod +x "$ROOT_DIR/scripts/fixfold" "$ROOT_DIR/scripts/menu.sh" "$BIN_TARGET"
+ln -sf "$ROOT_DIR/scripts/fixfold" "$BIN_TARGET2"
+chmod +x "$ROOT_DIR/scripts/fixfold" "$ROOT_DIR/scripts/menu.sh" "$BIN_TARGET" "$BIN_TARGET2"
 
 IP_ADDR=$(hostname -I | awk '{print $1}')
 API_PORT=${API_PORT:-4000}
