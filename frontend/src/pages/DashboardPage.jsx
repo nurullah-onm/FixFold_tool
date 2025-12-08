@@ -109,6 +109,7 @@ export default function DashboardPage({ lang = 'tr' }) {
   const t = (k) => texts[lang]?.[k] || texts.tr[k] || k;
   const [health, setHealth] = useState(null);
   const [stats, setStats] = useState({ inbounds: 0, clients: 0 });
+  const [metrics, setMetrics] = useState(fallbackHealth);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -119,6 +120,10 @@ export default function DashboardPage({ lang = 'tr' }) {
     setError('');
     try {
       const [h, i, c] = await Promise.all([getHealth().catch(() => ({ data: {} })), getInbounds(), getClients()]);
+      const incoming = h.data?.data || h.data || null;
+      if (incoming) {
+        setMetrics(incoming);
+      }
       setHealth(h.data || {});
       setStats({
         inbounds: i.data?.data?.total || 0,
@@ -129,7 +134,7 @@ export default function DashboardPage({ lang = 'tr' }) {
     }
   };
 
-  const h = { ...fallbackHealth, ...(health?.data || health) };
+  const h = metrics || fallbackHealth;
   const statusOk = health?.success ?? true;
 
   const topCards = [
