@@ -46,8 +46,8 @@ apt-get update -y
 apt-get install -y ca-certificates gnupg lsb-release git unzip sqlite3
 
 if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
-  green "Installing Node.js 18 LTS..."
-  curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+  green "Installing Node.js 20 LTS..."
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
   apt-get install -y nodejs
 fi
 

@@ -5,7 +5,7 @@ Xray-core yönetimi için Node.js tabanlı kontrol paneli. 3X-UI özelliklerini 
 ## Hızlı Başlangıç
 
 ```bash
-# Tek komut (Ubuntu/Debian, root): backend + frontend + pm2
+# Tek komut (Ubuntu/Debian, root): backend + frontend + pm2 (Node 20 LTS)
 bash <(curl -Ls https://raw.githubusercontent.com/nurullah-onm/FixFold_tool/main/scripts/install.sh)
 
 # Manuel kurulum
