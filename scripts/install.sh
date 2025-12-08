@@ -26,36 +26,36 @@ if [ ! -d "$BACKEND_DIR" ] || [ ! -d "$FRONTEND_DIR" ]; then
 fi
 
 if [ "$(id -u)" -ne 0 ]; then
-  red "Please run as root (sudo)."
+  red "Lütfen root (sudo) olarak çalıştırın."
   exit 1
 fi
 
 if ! command -v curl >/dev/null 2>&1; then
-  yellow "Installing curl..."
+  yellow "curl kuruluyor..."
   apt-get update -y
   apt-get install -y curl
 fi
 
 OS=$(awk -F= '/^ID=/{print $2}' /etc/os-release)
 if [[ "$OS" != "ubuntu" && "$OS" != "debian" ]]; then
-  yellow "This installer targets Ubuntu/Debian. Continue at your own risk."
+  yellow "Bu kurulum Ubuntu/Debian için hazırlandı. Diğer dağıtımlarda dikkatli kullanın."
 fi
 
-green "Updating apt and installing dependencies..."
+green "apt güncelleniyor ve bağımlılıklar kuruluyor..."
 apt-get update -y
 apt-get install -y ca-certificates gnupg lsb-release git unzip sqlite3
 
-if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
-  green "Installing Node.js 20 LTS..."
-  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-  apt-get install -y nodejs
-fi
+# Force Node.js 20 (Vite requires >=20.19)
+rm -f /etc/apt/sources.list.d/nodesource.list /etc/apt/sources.list.d/nodesource.list.dpkg-old 2>/dev/null || true
+green "Node.js 20 LTS kuruluyor..."
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y nodejs
 
 if ! command -v pm2 >/dev/null 2>&1; then
   npm install -g pm2
 fi
 
-green "Installing backend dependencies..."
+green "Backend bağımlılıkları kuruluyor..."
 cd "$BACKEND_DIR"
 npm install
 npx prisma generate
@@ -63,24 +63,24 @@ npx prisma generate
 # Ensure DATABASE_URL is set (SQLite default)
 export DATABASE_URL=${DATABASE_URL:-"file:./dev.db"}
 
-green "Running database migration..."
+green "Veritabanı migrasyonu çalıştırılıyor..."
 if ! npx prisma migrate deploy; then
-  yellow "migrate deploy failed, trying prisma db push..."
+  yellow "migrate deploy başarısız, prisma db push deneniyor..."
   npx prisma db push
 fi
 
-green "Seeding admin user (admin/admin1234)..."
+green "Admin kullanıcısı ekleniyor (admin/admin1234)..."
 SEED_ADMIN_USER=${SEED_ADMIN_USER:-admin}
 SEED_ADMIN_PASS=${SEED_ADMIN_PASS:-admin1234}
 SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-admin@example.com}
 SEED_ADMIN_USER="$SEED_ADMIN_USER" SEED_ADMIN_PASS="$SEED_ADMIN_PASS" SEED_ADMIN_EMAIL="$SEED_ADMIN_EMAIL" npm run seed:admin || true
 
-green "Starting backend with pm2 (fixfold-backend)..."
+green "pm2 ile backend başlatılıyor (fixfold-backend)..."
 pm2 delete fixfold-backend >/dev/null 2>&1 || true
 pm2 start npm --name fixfold-backend -- run start
 pm2 save
 
-green "Installing frontend dependencies..."
+green "Frontend bağımlılıkları kuruluyor..."
 cd "$FRONTEND_DIR"
 npm install
 npm run build
@@ -88,7 +88,7 @@ if ! command -v serve >/dev/null 2>&1; then
   npm install -g serve
 fi
 
-green "Starting frontend with pm2 (fixfold-frontend) on port 4173..."
+green "pm2 ile frontend başlatılıyor (port 4173)..."
 pm2 delete fixfold-frontend >/dev/null 2>&1 || true
 pm2 start "serve -s dist -l 4173" --name fixfold-frontend
 pm2 save
@@ -96,9 +96,9 @@ pm2 save
 IP_ADDR=$(hostname -I | awk '{print $1}')
 API_PORT=${API_PORT:-4000}
 green "------------------------------------------------------------------"
-green "FixFold installation finished."
+green "FixFold kurulumu tamamlandı."
 echo "Backend: http://${IP_ADDR}:${API_PORT}/api/health"
 echo "Frontend: http://${IP_ADDR}:4173"
-echo "Default admin: ${SEED_ADMIN_USER} / ${SEED_ADMIN_PASS}"
-echo "pm2 status: pm2 status"
+echo "Varsayılan admin: ${SEED_ADMIN_USER} / ${SEED_ADMIN_PASS}"
+echo "pm2 durum: pm2 status"
 green "------------------------------------------------------------------"

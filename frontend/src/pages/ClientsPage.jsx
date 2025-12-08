@@ -18,9 +18,9 @@ const texts = {
     createFail: 'Client oluşturulamadı',
     listFail: 'Listeler alınamadı'
   },
- {
+  en: {
     title: 'Clients',
-    desc: 'Client is tied to an inbound. Email is the ID; set traffic cap (GB) and choose inbound.',
+    desc: 'Client is tied to an inbound. Email is the ID; set traffic cap (GB, 0 = unlimited) and choose inbound.',
     refresh: 'Refresh',
     createTitle: 'Create Client',
     inbound: 'Inbound',
