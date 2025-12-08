@@ -45,7 +45,7 @@ const texts = {
     realityShort: 'Reality Short ID',
     createBtn: 'Oluştur'
   },
- {
+  en: {
     title: 'Inbounds',
     desc: 'Inbound defines which port/protocol Xray accepts traffic on. Fill TLS/Reality fields when required.',
     createTitle: 'Create Inbound',
