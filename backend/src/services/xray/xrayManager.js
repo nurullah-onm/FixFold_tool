@@ -132,7 +132,7 @@ class XrayManager extends EventEmitter {
 
   async testConfig(configPath = this.configPath) {
     return new Promise((resolve, reject) => {
-      const proc = spawn(this.binPath, ['test', '-c', configPath]);
+      const proc = spawn(this.binPath, ['run', '-test', '-c', configPath]);
       let output = '';
       proc.stdout.on('data', (data) => { output += data.toString(); });
       proc.stderr.on('data', (data) => { output += data.toString(); });
