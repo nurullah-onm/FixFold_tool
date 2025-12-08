@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { getClients, getInbounds, createClient } from '../services/api';
+import { getClients, getInbounds, createClient, getClientQr, getClientSubscription } from '../services/api';
 
 const texts = {
   tr: {
     title: 'Kullanıcılar (Clients)',
-    desc: 'Client, inbound altında tanımlı kullanıcıdır. Email ID olarak kullanılır; trafik limiti (GB) ve inbound seçimiyle oluşturulur.',
+    desc: 'Client, inbound altında tanımlı kullanıcıdır. Email ID olarak kullanılır; trafik limiti (GB, 0 = limitsiz) ve inbound seçimiyle oluşturulur.',
     refresh: 'Yenile',
     createTitle: 'Client Oluştur',
     inbound: 'Giriş (Inbound)',
@@ -16,7 +16,11 @@ const texts = {
     none: 'Client bulunamadı.',
     created: 'Client oluşturuldu.',
     createFail: 'Client oluşturulamadı',
-    listFail: 'Listeler alınamadı'
+    listFail: 'Listeler alınamadı',
+    qrTitle: 'QR / Link',
+    copy: 'Kopyala',
+    openLink: 'Linki Aç',
+    genLinkFail: 'Link alınamadı'
   },
   en: {
     title: 'Clients',
@@ -32,7 +36,11 @@ const texts = {
     none: 'No clients found.',
     created: 'Client created.',
     createFail: 'Failed to create client',
-    listFail: 'Failed to load lists'
+    listFail: 'Failed to load lists',
+    qrTitle: 'QR / Link',
+    copy: 'Copy',
+    openLink: 'Open Link',
+    genLinkFail: 'Failed to get link'
   }
 };
 
@@ -48,6 +56,8 @@ export default function ClientsPage({ lang = 'tr' }) {
   const [inbounds, setInbounds] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [msg, setMsg] = useState('');
+  const [qr, setQr] = useState(null);
+  const [subLink, setSubLink] = useState(null);
 
   useEffect(() => {
     loadLists();
@@ -81,6 +91,36 @@ export default function ClientsPage({ lang = 'tr' }) {
       loadLists();
     } catch (err) {
       setMsg(err.response?.data?.error || t('createFail'));
+    }
+  };
+
+  const fetchQr = async (id) => {
+    setMsg('');
+    setSubLink(null);
+    try {
+      const res = await getClientQr(id);
+      setQr(res.data?.data || res.data);
+    } catch (err) {
+      setMsg(err.response?.data?.error || t('genLinkFail'));
+    }
+  };
+
+  const fetchSub = async (id) => {
+    setMsg('');
+    setQr(null);
+    try {
+      const res = await getClientSubscription(id);
+      setSubLink(res.data?.data || res.data);
+    } catch (err) {
+      setMsg(err.response?.data?.error || t('genLinkFail'));
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    if (!text) return;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+      setMsg(t('copy') + ' ✓');
     }
   };
 
@@ -137,11 +177,39 @@ export default function ClientsPage({ lang = 'tr' }) {
                 <div className="muted">
                   Inbound: {c.inboundId} • Up: {c.up} • Down: {c.down}
                 </div>
+                <div className="flex" style={{ gap: 8, marginTop: 6 }}>
+                  <button type="button" className="btn-secondary small" onClick={() => fetchQr(c.id)}>QR</button>
+                  <button type="button" className="btn-secondary small" onClick={() => fetchSub(c.id)}>Link</button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {(qr || subLink) && (
+        <div className="card" style={{ marginTop: 12 }}>
+          <h3>{t('qrTitle')}</h3>
+          {qr?.qrcode && (
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <img src={qr.qrcode} alt="QR" style={{ width: 160, height: 160, objectFit: 'contain' }} />
+              <div className="muted small" style={{ wordBreak: 'break-all' }}>{qr.link}</div>
+              <div className="flex" style={{ gap: 8 }}>
+                <button type="button" className="btn-secondary small" onClick={() => copyToClipboard(qr.link)}>{t('copy')}</button>
+                <a className="btn small" href={qr.link} target="_blank" rel="noreferrer">{t('openLink')}</a>
+              </div>
+            </div>
+          )}
+          {subLink && (
+            <div style={{ marginTop: 8 }}>
+              <div className="muted small" style={{ wordBreak: 'break-all' }}>{subLink}</div>
+              <div className="flex" style={{ gap: 8, marginTop: 6 }}>
+                <button type="button" className="btn-secondary small" onClick={() => copyToClipboard(subLink)}>{t('copy')}</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
