@@ -32,7 +32,7 @@ const strings = {
   en: {
     brand: 'FixFold',
     sub: 'Xray Control',
-    dashboard: 'Dashboard',
+    dashboard: 'Overview',
     inbounds: 'Inbounds',
     clients: 'Clients',
     servers: 'Servers',
@@ -48,7 +48,8 @@ const strings = {
     loginSuccess: 'Login successful.',
     loginFail: 'Login failed',
     themeLight: 'Light Mode',
-    themeDark: 'Dark Mode'
+    themeDark: 'Dark Mode',
+    loginHint: 'Enter your credentials to continue.'
   },
   tr: {
     brand: 'FixFold',
@@ -69,14 +70,16 @@ const strings = {
     loginSuccess: 'Giriş başarılı.',
     loginFail: 'Giriş başarısız',
     themeLight: 'Açık Mod',
-    themeDark: 'Koyu Mod'
+    themeDark: 'Koyu Mod',
+    loginHint: 'Devam etmek için kullanıcı adı ve şifre girin.'
   }
 };
 
 export default function App() {
-  const [auth, setAuth] = useState({ username: 'admin', password: 'admin' });
+  const [auth, setAuth] = useState({ username: '', password: '' });
   const [token, setToken] = useState('');
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('info');
   const [theme, setTheme] = useState('dark');
   const [lang, setLang] = useState('tr');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -102,6 +105,17 @@ export default function App() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage('');
+    setMessageType('info');
+    if (!auth.username || auth.username.length < 3) {
+      setMessage('Kullanıcı adı en az 3 karakter olmalı');
+      setMessageType('error');
+      return;
+    }
+    if (!auth.password || auth.password.length < 8) {
+      setMessage('Şifre en az 8 karakter olmalı');
+      setMessageType('error');
+      return;
+    }
     try {
       const { data } = await login(auth);
       const access = data?.data?.accessToken;
@@ -109,9 +123,11 @@ export default function App() {
       setAuthToken(access);
       localStorage.setItem('token', access);
       setMessage(t('loginSuccess'));
+      setMessageType('success');
       navigate('/');
     } catch (err) {
       setMessage(err.response?.data?.error || t('loginFail'));
+      setMessageType('error');
     }
   };
 
@@ -195,7 +211,7 @@ export default function App() {
                 <label>{t('password')}</label>
                 <input
                   type="password"
-                  placeholder="********"
+                  placeholder="••••••••"
                   value={auth.password}
                   onChange={(e) => setAuth((p) => ({ ...p, password: e.target.value }))}
                   required
@@ -204,7 +220,8 @@ export default function App() {
               <button type="submit" className="btn">
                 <FontAwesomeIcon icon={faSignIn} /> {t('login')}
               </button>
-              {message && <p className="muted small">{message}</p>}
+              <p className="muted small">{t('loginHint')}</p>
+              {message && <p className={`muted small ${messageType === 'error' ? 'text-error' : 'text-success'}`}>{message}</p>}
             </form>
           ) : (
             <div className="session">
