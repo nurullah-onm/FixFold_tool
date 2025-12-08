@@ -61,10 +61,37 @@ pm2 restart fixfold-backend fixfold-frontend fixfold-xray
 pm2 logs fixfold-backend --lines 50
 ```
 
+### Useful Commands
+```bash
+# Xray version / test
+xray -version
+xray run -c /etc/x-ui/config.json --test
+
+# Database migration (manual)
+cd backend && npx prisma migrate deploy
+
+# Regenerate Prisma Client
+cd backend && npx prisma generate
+
+# Build frontend
+cd frontend && npm run build
+```
+
 ### Scripts
 - `scripts/install.sh` : one-shot install (Node20, Xray download, pm2)
 - `scripts/download-xray.sh` : fetch latest Xray
 - `scripts/fixfold` or `FixFold` : terminal menu (pm2/log/health)
+- `scripts/menu.sh` : same menu (manual run)
+
+### API (selection)
+- `POST /api/auth/login`
+- `GET/POST/DELETE /api/inbounds`
+- `GET/POST/DELETE /api/clients`
+- `GET /api/clients/:id/qrcode`
+- `GET /api/clients/:id/subscription`
+- `GET /api/xray/status`
+- `GET /api/ai/anomalies`
+- `GET /api/servers`
 
 ---
 ## TR · Genel Bakış
@@ -129,6 +156,17 @@ pm2 logs fixfold-backend --lines 50
 - `scripts/install.sh` : tek komut kurulum (Node20, Xray indir, pm2)
 - `scripts/download-xray.sh` : Xray indir
 - `scripts/fixfold` veya `FixFold` : terminal menüsü (pm2/log/health)
+- `scripts/menu.sh` : aynı menü (manuel çalıştırma)
+
+### API (seçme)
+- `POST /api/auth/login`
+- `GET/POST/DELETE /api/inbounds`
+- `GET/POST/DELETE /api/clients`
+- `GET /api/clients/:id/qrcode`
+- `GET /api/clients/:id/subscription`
+- `GET /api/xray/status`
+- `GET /api/ai/anomalies`
+- `GET /api/servers`
 
 ### Notlar
 - Xray varsayılan API/stats portu: 127.0.0.1:62789
