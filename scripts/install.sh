@@ -154,7 +154,7 @@ SEED_ADMIN_USER="$SEED_ADMIN_USER" SEED_ADMIN_PASS="$SEED_ADMIN_PASS" SEED_ADMIN
 
 green "pm2 ile backend başlatılıyor (fixfold-backend)..."
 pm2 delete fixfold-backend >/dev/null 2>&1 || true
-pm2 start npm --name fixfold-backend -- run start
+pm2 start "npm run start" --name fixfold-backend --update-env
 pm2 save
 
 green "Frontend bağımlılıkları kuruluyor..."
@@ -167,7 +167,7 @@ fi
 
 green "pm2 ile frontend başlatılıyor (port 4173)..."
 pm2 delete fixfold-frontend >/dev/null 2>&1 || true
-pm2 start "serve -s dist -l 4173" --name fixfold-frontend
+pm2 start "serve -s dist -l 4173" --name fixfold-frontend --update-env
 pm2 save
 
 # Xray'i pm2 ile ayağa kaldır (varsayılan config)
