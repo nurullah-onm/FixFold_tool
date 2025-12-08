@@ -172,3 +172,6 @@ pm2 logs fixfold-backend --lines 50
 - Xray varsayılan API/stats portu: 127.0.0.1:62789
 - Inbound ekledikten sonra config otomatik yazılır ve pm2’de xray reload edilir.
 - Telegram için `TELEGRAM_BOT_TOKEN` boşsa bot devre dışı kalır.
+
+---
+License: MIT (see LICENSE)
