@@ -69,8 +69,11 @@ if ! npx prisma migrate deploy; then
   npx prisma db push
 fi
 
-green "Seeding admin user (admin/admin)..."
-npm run seed:admin || true
+green "Seeding admin user (admin/admin1234)..."
+SEED_ADMIN_USER=${SEED_ADMIN_USER:-admin}
+SEED_ADMIN_PASS=${SEED_ADMIN_PASS:-admin1234}
+SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-admin@example.com}
+SEED_ADMIN_USER="$SEED_ADMIN_USER" SEED_ADMIN_PASS="$SEED_ADMIN_PASS" SEED_ADMIN_EMAIL="$SEED_ADMIN_EMAIL" npm run seed:admin || true
 
 green "Starting backend with pm2 (fixfold-backend)..."
 pm2 delete fixfold-backend >/dev/null 2>&1 || true
