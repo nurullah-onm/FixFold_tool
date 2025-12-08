@@ -84,6 +84,54 @@ VITE_PANEL_TITLE=FixFold
 EOF
 fi
 
+# Xray binary yoksa indir
+if [ ! -x /usr/local/bin/xray ]; then
+  green "Xray indiriliyor (latest)..."
+  ARCH=$(uname -m)
+  OSNAME=$(uname -s | tr '[:upper:]' '[:lower:]')
+  case "$ARCH" in
+    x86_64) ARCH="64" ;;
+    aarch64) ARCH="arm64-v8a" ;;
+    *) ARCH="64" ;;
+  esac
+  LATEST_VERSION=$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases/latest | grep tag_name | cut -d '"' -f 4)
+  DOWNLOAD_URL="https://github.com/XTLS/Xray-core/releases/download/${LATEST_VERSION}/Xray-${OSNAME}-${ARCH}.zip"
+  wget -O /tmp/xray.zip "$DOWNLOAD_URL"
+  unzip -o /tmp/xray.zip -d /usr/local/bin/
+  chmod +x /usr/local/bin/xray
+  rm /tmp/xray.zip
+fi
+
+# Varsayılan Xray config (API/stats) yoksa oluştur
+mkdir -p /etc/x-ui
+if [ ! -f /etc/x-ui/config.json ]; then
+cat > /etc/x-ui/config.json <<'EOF'
+{
+  "log": { "loglevel": "warning" },
+  "api": { "tag": "api", "services": ["StatsService", "HandlerService"] },
+  "stats": {},
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 62789,
+      "protocol": "dokodemo-door",
+      "settings": { "address": "127.0.0.1", "port": 62789, "network": "tcp,udp" },
+      "tag": "api"
+    }
+  ],
+  "outbounds": [
+    { "protocol": "freedom", "settings": {}, "tag": "direct" },
+    { "protocol": "blackhole", "settings": {}, "tag": "blocked" }
+  ],
+  "routing": {
+    "rules": [
+      { "type": "field", "inboundTag": ["api"], "outboundTag": "api" }
+    ]
+  }
+}
+EOF
+fi
+
 green "Backend bağımlılıkları kuruluyor..."
 cd "$BACKEND_DIR"
 npm install
@@ -122,6 +170,11 @@ pm2 delete fixfold-frontend >/dev/null 2>&1 || true
 pm2 start "serve -s dist -l 4173" --name fixfold-frontend
 pm2 save
 
+# Xray'i pm2 ile ayağa kaldır (varsayılan config)
+pm2 delete fixfold-xray >/dev/null 2>&1 || true
+pm2 start /usr/local/bin/xray --name fixfold-xray -- -c /etc/x-ui/config.json
+pm2 save
+
 # Terminal menüsü için kısayol (FixFold)
 BIN_TARGET="/usr/local/bin/FixFold"
 BIN_TARGET2="/usr/local/bin/fixfold"
@@ -129,7 +182,6 @@ ln -sf "$ROOT_DIR/scripts/fixfold" "$BIN_TARGET"
 ln -sf "$ROOT_DIR/scripts/fixfold" "$BIN_TARGET2"
 chmod +x "$ROOT_DIR/scripts/fixfold" "$ROOT_DIR/scripts/menu.sh" "$BIN_TARGET" "$BIN_TARGET2"
 
-IP_ADDR=$(hostname -I | awk '{print $1}')
 API_PORT=${API_PORT:-4000}
 green "------------------------------------------------------------------"
 green "FixFold kurulumu tamamlandı."
