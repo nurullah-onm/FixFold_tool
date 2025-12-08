@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
-import { getInbounds, createInbound } from '../services/api';
+import { getInbounds, createInbound, deleteInbound } from '../services/api';
 
 const texts = {
   tr: {
     title: 'Girişler (Inbound)',
     desc: 'Giriş (Inbound), Xray’in hangi port/protokolden trafik kabul edeceğini tanımlar. TLS/Reality gerekiyorsa ilgili alanları doldurun.',
-    createTitle: 'Giriş (Inbound) Oluştur',
+    createTitle: 'Giriş Oluştur',
     listTitle: 'Mevcut Girişler',
     none: 'Giriş bulunamadı.',
     created: 'Giriş (Inbound) oluşturuldu.',
+    deleted: 'Giriş silindi.',
+    deleteFail: 'Giriş silinemedi',
     createFail: 'Giriş oluşturulamadı',
     listFail: 'Giriş listesi alınamadı',
     refresh: 'Yenile',
@@ -43,7 +45,8 @@ const texts = {
     realityServer: 'Reality Server Name',
     realityPublic: 'Reality Public Key',
     realityShort: 'Reality Short ID',
-    createBtn: 'Oluştur'
+    createBtn: 'Oluştur',
+    deleteBtn: 'Sil'
   },
   en: {
     title: 'Inbounds',
@@ -52,6 +55,8 @@ const texts = {
     listTitle: 'Existing Inbounds',
     none: 'No inbound found.',
     created: 'Inbound created.',
+    deleted: 'Inbound deleted.',
+    deleteFail: 'Failed to delete inbound',
     createFail: 'Failed to create inbound',
     listFail: 'Failed to load inbounds',
     refresh: 'Refresh',
@@ -86,7 +91,8 @@ const texts = {
     realityServer: 'Reality Server Name',
     realityPublic: 'Reality Public Key',
     realityShort: 'Reality Short ID',
-    createBtn: 'Create'
+    createBtn: 'Create',
+    deleteBtn: 'Delete'
   }
 };
 
@@ -112,7 +118,7 @@ const emptyForm = {
   httpHost: '',
   httpPath: '/',
   wsHost: '',
-  wsPath: '/',
+  wsPath: '/ws',
   grpcServiceName: '',
   sockoptTproxy: false,
   sockoptMark: '',
@@ -132,6 +138,7 @@ export default function InboundsPage({ lang = 'tr' }) {
   const [inbounds, setInbounds] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [msg, setMsg] = useState('');
+  const [msgType, setMsgType] = useState('info');
 
   useEffect(() => {
     loadInbounds();
@@ -144,22 +151,23 @@ export default function InboundsPage({ lang = 'tr' }) {
       setInbounds(data.data.inbounds || []);
     } catch (err) {
       setMsg(err.response?.data?.error || t('listFail'));
+      setMsgType('error');
     }
   };
 
-const buildStreamSettings = () => {
-  const network = form.network.toLowerCase();
-  const security = form.security.toLowerCase();
-  const stream = { network, security };
-  if (network === 'ws') {
-    stream.wsSettings = {
-      path: form.wsPath || '/',
-      headers: form.wsHost ? { Host: form.wsHost } : undefined
-    };
-  }
-  if (network === 'grpc') {
-    stream.grpcSettings = { serviceName: form.grpcServiceName || '' };
-  }
+  const buildStreamSettings = () => {
+    const network = form.network.toLowerCase();
+    const security = form.security.toLowerCase();
+    const stream = { network, security };
+    if (network === 'ws') {
+      stream.wsSettings = {
+        path: form.wsPath || '/',
+        headers: form.wsHost ? { Host: form.wsHost } : undefined
+      };
+    }
+    if (network === 'grpc') {
+      stream.grpcSettings = { serviceName: form.grpcServiceName || '' };
+    }
     if (network === 'http2') {
       stream.httpSettings = { host: form.httpHost ? [form.httpHost] : [], path: form.httpPath || '/' };
     }
@@ -191,6 +199,17 @@ const buildStreamSettings = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMsg('');
+    setMsgType('info');
+    if (!form.remark || form.remark.length < 2) {
+      setMsg('Ad/Remark en az 2 karakter olmalı');
+      setMsgType('error');
+      return;
+    }
+    if (!form.port) {
+      setMsg('Port zorunlu');
+      setMsgType('error');
+      return;
+    }
     try {
       const streamSettings = buildStreamSettings();
       const tlsSettings = buildTlsSettings();
@@ -228,15 +247,32 @@ const buildStreamSettings = () => {
       await createInbound(payload);
       setForm(emptyForm);
       setMsg(t('created'));
+      setMsgType('success');
       loadInbounds();
     } catch (err) {
       setMsg(err.response?.data?.error || t('createFail'));
+      setMsgType('error');
     }
   };
 
   const addFallback = () => {
     if (form.fallbackInput) {
       setForm({ ...form, fallbacks: [...form.fallbacks, form.fallbackInput], fallbackInput: '' });
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Silmek istediğinize emin misiniz?')) return;
+    setMsg('');
+    setMsgType('info');
+    try {
+      await deleteInbound(id);
+      setMsg(t('deleted'));
+      setMsgType('success');
+      loadInbounds();
+    } catch (err) {
+      setMsg(err.response?.data?.error || t('deleteFail'));
+      setMsgType('error');
     }
   };
 
@@ -247,7 +283,7 @@ const buildStreamSettings = () => {
         <button onClick={loadInbounds} className="btn-secondary">{t('refresh')}</button>
       </div>
       <p className="muted">{t('desc')}</p>
-      {msg && <p className="muted">{msg}</p>}
+      {msg && <p className={`muted ${msgType === 'error' ? 'text-error' : 'text-success'}`}>{msg}</p>}
 
       <div className="grid-2">
         <div className="card">
@@ -429,10 +465,16 @@ const buildStreamSettings = () => {
                 <div className="flex-between">
                   <div>
                     <strong>{inb.remark}</strong> <span className="tag">{inb.protocol}</span>
+                    <span className="muted small" style={{ marginLeft: 6 }}>Port {inb.port}</span>
                   </div>
-                  <div className="muted">{inb.isActive ? t('active') : 'Pasif'}</div>
+                  <div className="flex" style={{ gap: 8 }}>
+                    <span className="tag">{inb.isActive ? t('active') : 'Pasif'}</span>
+                    <button type="button" className="btn-danger small" onClick={() => handleDelete(inb.id)}>
+                      {t('deleteBtn')}
+                    </button>
+                  </div>
                 </div>
-                <div className="muted">Port {inb.port} • {inb.listen}</div>
+                <div className="muted small">Listen: {inb.listen} • Tag: {inb.tag}</div>
               </div>
             ))}
           </div>

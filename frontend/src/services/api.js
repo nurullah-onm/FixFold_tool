@@ -21,6 +21,7 @@ export const getHealth = () => api.get('/health');
 export const login = (credentials) => api.post('/auth/login', credentials);
 export const getInbounds = () => api.get('/inbounds');
 export const createInbound = (data) => api.post('/inbounds', data);
+export const deleteInbound = (id) => api.delete(`/inbounds/${id}`);
 export const getClients = () => api.get('/clients');
 export const createClient = (data) => api.post('/clients', data);
 export const deleteClient = (id) => api.delete(`/clients/${id}`);
