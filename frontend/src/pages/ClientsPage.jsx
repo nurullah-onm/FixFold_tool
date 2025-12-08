@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { getClients, getInbounds, createClient, getClientQr, getClientSubscription } from '../services/api';
+import {
+  getClients,
+  getInbounds,
+  createClient,
+  deleteClient,
+  getClientQr,
+  getClientSubscription
+} from '../services/api';
 
 const texts = {
   tr: {
@@ -15,6 +22,8 @@ const texts = {
     listTitle: "Mevcut Client'lar",
     none: 'Client bulunamadı.',
     created: 'Client oluşturuldu.',
+    deleted: 'Client silindi.',
+    deleteFail: 'Client silinemedi',
     createFail: 'Client oluşturulamadı',
     listFail: 'Listeler alınamadı',
     qrTitle: 'QR / Link',
@@ -35,6 +44,8 @@ const texts = {
     listTitle: 'Existing Clients',
     none: 'No clients found.',
     created: 'Client created.',
+    deleted: 'Client deleted.',
+    deleteFail: 'Failed to delete client',
     createFail: 'Failed to create client',
     listFail: 'Failed to load lists',
     qrTitle: 'QR / Link',
@@ -56,6 +67,7 @@ export default function ClientsPage({ lang = 'tr' }) {
   const [inbounds, setInbounds] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [msg, setMsg] = useState('');
+  const [msgType, setMsgType] = useState('info');
   const [qr, setQr] = useState(null);
   const [subLink, setSubLink] = useState(null);
 
@@ -74,12 +86,14 @@ export default function ClientsPage({ lang = 'tr' }) {
       }
     } catch (err) {
       setMsg(err.response?.data?.error || t('listFail'));
+      setMsgType('error');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMsg('');
+    setMsgType('info');
     try {
       await createClient({
         inboundId: form.inboundId,
@@ -88,31 +102,37 @@ export default function ClientsPage({ lang = 'tr' }) {
       });
       setForm(emptyForm);
       setMsg(t('created'));
+      setMsgType('success');
       loadLists();
     } catch (err) {
       setMsg(err.response?.data?.error || t('createFail'));
+      setMsgType('error');
     }
   };
 
   const fetchQr = async (id) => {
     setMsg('');
+    setMsgType('info');
     setSubLink(null);
     try {
       const res = await getClientQr(id);
       setQr(res.data?.data || res.data);
     } catch (err) {
       setMsg(err.response?.data?.error || t('genLinkFail'));
+      setMsgType('error');
     }
   };
 
   const fetchSub = async (id) => {
     setMsg('');
+    setMsgType('info');
     setQr(null);
     try {
       const res = await getClientSubscription(id);
       setSubLink(res.data?.data || res.data);
     } catch (err) {
       setMsg(err.response?.data?.error || t('genLinkFail'));
+      setMsgType('error');
     }
   };
 
@@ -121,6 +141,22 @@ export default function ClientsPage({ lang = 'tr' }) {
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(text);
       setMsg(t('copy') + ' ✓');
+      setMsgType('success');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Silmek istediğinize emin misiniz?')) return;
+    setMsg('');
+    setMsgType('info');
+    try {
+      await deleteClient(id);
+      setMsg(t('deleted'));
+      setMsgType('success');
+      loadLists();
+    } catch (err) {
+      setMsg(err.response?.data?.error || t('deleteFail'));
+      setMsgType('error');
     }
   };
 
@@ -131,7 +167,7 @@ export default function ClientsPage({ lang = 'tr' }) {
         <button onClick={loadLists} className="btn-secondary">{t('refresh')}</button>
       </div>
       <p className="muted">{t('desc')}</p>
-      {msg && <p className="muted">{msg}</p>}
+      {msg && <p className={`muted ${msgType === 'error' ? 'text-error' : 'text-success'}`}>{msg}</p>}
 
       <div className="grid-2">
         <div className="card">
@@ -171,15 +207,18 @@ export default function ClientsPage({ lang = 'tr' }) {
             {clients.length === 0 && <p className="muted">{t('none')}</p>}
             {clients.map((c) => (
               <div key={c.id} className="list-item">
-                <div>
-                  <strong>{c.email}</strong>
+                <div className="flex-between">
+                  <div>
+                    <strong>{c.email}</strong>
+                  </div>
+                  <div className="flex" style={{ gap: 8 }}>
+                    <button type="button" className="btn-secondary small" onClick={() => fetchQr(c.id)}>QR</button>
+                    <button type="button" className="btn-secondary small" onClick={() => fetchSub(c.id)}>Link</button>
+                    <button type="button" className="btn-danger small" onClick={() => handleDelete(c.id)}>Sil</button>
+                  </div>
                 </div>
                 <div className="muted">
                   Inbound: {c.inboundId} • Up: {c.up} • Down: {c.down}
-                </div>
-                <div className="flex" style={{ gap: 8, marginTop: 6 }}>
-                  <button type="button" className="btn-secondary small" onClick={() => fetchQr(c.id)}>QR</button>
-                  <button type="button" className="btn-secondary small" onClick={() => fetchSub(c.id)}>Link</button>
                 </div>
               </div>
             ))}

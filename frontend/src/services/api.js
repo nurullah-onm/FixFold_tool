@@ -23,6 +23,7 @@ export const getInbounds = () => api.get('/inbounds');
 export const createInbound = (data) => api.post('/inbounds', data);
 export const getClients = () => api.get('/clients');
 export const createClient = (data) => api.post('/clients', data);
+export const deleteClient = (id) => api.delete(`/clients/${id}`);
 export const getClientQr = (id) => api.get(`/clients/${id}/qrcode`);
 export const getClientSubscription = (id) => api.get(`/clients/${id}/subscription`);
 export const getServers = () => api.get('/servers');
