@@ -17,7 +17,8 @@ npm run prisma:migrate
 npm run dev
 
 # Varsayılan admin (opsiyonel; var olan kullanıcıyı ADMIN yapar)
-SEED_ADMIN_USER=admin SEED_ADMIN_PASS=admin npm run seed:admin
+# Parola en az 8 karakter olmalıdır; varsayılan admin1234’tür
+SEED_ADMIN_USER=admin SEED_ADMIN_PASS=admin1234 npm run seed:admin
 
 # Frontend (Vite + React)
 cd ../frontend

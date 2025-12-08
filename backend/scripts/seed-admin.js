@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import prisma from '../src/config/prisma.js';
 
 const username = process.env.SEED_ADMIN_USER || 'admin';
-const password = process.env.SEED_ADMIN_PASS || 'admin';
+const password = process.env.SEED_ADMIN_PASS || 'admin1234';
 const email = process.env.SEED_ADMIN_EMAIL || 'admin@example.com';
 
 async function main () {
