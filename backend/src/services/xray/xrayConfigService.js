@@ -16,13 +16,47 @@ const validateConfig = (config) => {
   return value;
 };
 
+const normalizeSockopt = (sockopt = {}) => {
+  const normalized = { ...sockopt };
+  // tproxy must be string: off | redirect | tproxy
+  if (normalized.tproxy !== undefined) {
+    const tv = normalized.tproxy;
+    if (tv === true) normalized.tproxy = 'redirect';
+    else if (tv === false || tv === null) normalized.tproxy = 'off';
+    else if (typeof tv === 'string' && ['off', 'redirect', 'tproxy'].includes(tv)) {
+      normalized.tproxy = tv;
+    } else {
+      normalized.tproxy = 'off';
+    }
+  }
+  // mark must be number
+  if (normalized.mark !== undefined && normalized.mark !== null && normalized.mark !== '') {
+    const mk = Number(normalized.mark);
+    normalized.mark = Number.isFinite(mk) ? mk : undefined;
+  }
+  return normalized;
+};
+
+const normalizeConfig = (config) => {
+  const clone = { ...config, inbounds: Array.isArray(config.inbounds) ? [...config.inbounds] : [] };
+  clone.inbounds = clone.inbounds.map((inb) => {
+    const next = { ...inb };
+    if (next.streamSettings && next.streamSettings.sockopt) {
+      next.streamSettings = { ...next.streamSettings, sockopt: normalizeSockopt(next.streamSettings.sockopt) };
+    }
+    return next;
+  });
+  return clone;
+};
+
 export const saveConfig = async (configData) => {
   try {
     const validated = validateConfig(configData);
+    const normalized = normalizeConfig(validated);
     await prisma.xrayConfig.updateMany({ data: { isActive: false } });
-    const saved = await prisma.xrayConfig.create({ data: { ...validated, isActive: true } });
+    const saved = await prisma.xrayConfig.create({ data: { ...normalized, isActive: true } });
 
-    await writeConfigFile(validated);
+    await writeConfigFile(normalized);
     logger.info(`Config saved and written to file: ${saved.id}`);
     return saved;
   } catch (error) {
@@ -47,11 +81,12 @@ export const applyConfig = async (configId) => {
     await prisma.xrayConfig.update({ where: { id: configId }, data: { isActive: true } });
 
     validateConfig(config);
-    await writeConfigFile(config);
+    const normalized = normalizeConfig(config);
+    await writeConfigFile(normalized);
     await xrayManager.testConfig(env.xray.configPath);
     await xrayManager.reloadConfig();
     logger.info(`Applied config ${configId}`);
-    return config;
+    return normalized;
   } catch (error) {
     logger.error(`Apply config failed: ${error.message}`);
     throw error;
@@ -81,8 +116,9 @@ export const syncConfigFromDB = async () => {
     throw err;
   }
   validateConfig(active);
-  await writeConfigFile(active);
-  return active;
+  const normalized = normalizeConfig(active);
+  await writeConfigFile(normalized);
+  return normalized;
 };
 
 export const writeConfigFile = async (config) => {
