@@ -79,16 +79,16 @@ export const login = async (username, password) => {
   try {
     const user = await prisma.user.findUnique({ where: { username } });
     if (!user) {
-      throw createError('Invalid credentials', 401);
+      throw createError('Kullanıcı adı veya şifre hatalı', 401);
     }
 
     if (!user.isActive) {
-      throw createError('User is inactive', 403);
+      throw createError('Kullanıcı pasif durumda', 403);
     }
 
     const match = await bcrypt.compare(password, user.passwordHash);
     if (!match) {
-      throw createError('Invalid credentials', 401);
+      throw createError('Kullanıcı adı veya şifre hatalı', 401);
     }
 
     await prisma.user.update({

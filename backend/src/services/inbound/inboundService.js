@@ -236,7 +236,7 @@ class InboundService {
 
   async _validatePortAvailability(port, excludeId) {
     if (port < 1 || port > 65535) {
-      throw createError('Port is invalid', 400);
+      throw createError('Port aralığı geçersiz (1-65535)', 400);
     }
     const existing = await prisma.inbound.findFirst({
       where: {
@@ -245,7 +245,8 @@ class InboundService {
       }
     });
     if (existing) {
-      throw createError('Port already in use', 409);
+      const message = `Port ${port} zaten kullanımda`;
+      throw createError(message, 409);
     }
     return true;
   }

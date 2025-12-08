@@ -4,9 +4,13 @@ const errorHandler = (err, req, res, next) => {
   const message = err.message || 'Unexpected error';
   const payload = {
     success: false,
-    error: message,
-    ...(req.app.get('env') !== 'production' && err.stack ? { stack: err.stack } : {})
+    error: message
   };
+
+  if (err.code) payload.code = err.code;
+  if (req.app.get('env') !== 'production' && err.stack) {
+    payload.stack = err.stack;
+  }
 
   res.status(status).json(payload);
 };

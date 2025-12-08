@@ -7,9 +7,9 @@ let botInstance = null;
 
 const menuKeyboard = {
   keyboard: [
-    ['📊 Durum', '🔌 Girişler'],
-    ['👥 Client\'lar', '🧠 AI'],
-    ['🖥 Sunucular']
+    ['📊 Durum', '📥 Girişler'],
+    ['👤 Clients', '🤖 AI'],
+    ['🖥️ Sunucular']
   ],
   resize_keyboard: true
 };
@@ -38,34 +38,35 @@ async function handleStatus(chatId) {
     prisma.server.count(),
     prisma.anomaly.count({ where: { resolved: false } })
   ]);
-  const msg = `📊 Durum\nInbounds: ${inbounds}\nClients: ${clients}\nServers: ${servers}\nAçık anomali: ${anomalies}`;
+  const msg = `Durum\nInbounds: ${inbounds}\nClients: ${clients}\nServers: ${servers}\nAçık anomali: ${anomalies}`;
   botInstance.sendMessage(chatId, msg, { reply_markup: menuKeyboard });
 }
 
 async function handleInbounds(chatId) {
   const list = await prisma.inbound.findMany({ take: 5, orderBy: { createdAt: 'desc' } });
   if (list.length === 0) return botInstance.sendMessage(chatId, 'Kayıtlı giriş yok.', { reply_markup: menuKeyboard });
-  botInstance.sendMessage(chatId, `🔌 Girişler (son 5)\n${formatInbounds(list)}`, { reply_markup: menuKeyboard });
+  botInstance.sendMessage(chatId, `Girişler (son 5)\n${formatInbounds(list)}`, { reply_markup: menuKeyboard });
 }
 
 async function handleClients(chatId) {
   const list = await prisma.client.findMany({ take: 5, orderBy: { createdAt: 'desc' } });
   if (list.length === 0) return botInstance.sendMessage(chatId, 'Kayıtlı client yok.', { reply_markup: menuKeyboard });
-  botInstance.sendMessage(chatId, `👥 Clients (son 5)\n${formatClients(list)}`, { reply_markup: menuKeyboard });
+  botInstance.sendMessage(chatId, `Clients (son 5)\n${formatClients(list)}`, { reply_markup: menuKeyboard });
 }
 
 async function handleAI(chatId) {
   const unresolved = await prisma.anomaly.findMany({ where: { resolved: false }, take: 5, orderBy: { detectedAt: 'desc' } });
   if (unresolved.length === 0) return botInstance.sendMessage(chatId, 'Açık anomali yok.', { reply_markup: menuKeyboard });
-  const text = unresolved.map((a) => `• ${a.id.slice(0, 6)} ${a.type} [${a.severity}] skor ${a.score}`).join('\n') +
-    '\n/resolve <id> ile kapat.';
-  botInstance.sendMessage(chatId, `🧠 AI Anomalileri\n${text}`, { reply_markup: menuKeyboard });
+  const text = unresolved
+    .map((a) => `• ${a.id.slice(0, 6)} ${a.type} [${a.severity}] skor ${a.score}`)
+    .join('\n') + '\n/resolve <id> ile kapat.';
+  botInstance.sendMessage(chatId, `AI Anomalileri\n${text}`, { reply_markup: menuKeyboard });
 }
 
 async function handleServers(chatId) {
   const list = await prisma.server.findMany({ take: 5, orderBy: { createdAt: 'desc' } });
   if (list.length === 0) return botInstance.sendMessage(chatId, 'Sunucu yok.', { reply_markup: menuKeyboard });
-  botInstance.sendMessage(chatId, `🖥 Sunucular\n${formatServers(list)}`, { reply_markup: menuKeyboard });
+  botInstance.sendMessage(chatId, `Sunucular\n${formatServers(list)}`, { reply_markup: menuKeyboard });
 }
 
 async function handleResolve(chatId, id) {
@@ -88,7 +89,7 @@ export function startTelegramBot() {
 
   botInstance.onText(/\/start/, (msg) => {
     if (!isAllowed(msg.chat.id)) return sendAccessDenied(msg.chat.id);
-    botInstance.sendMessage(msg.chat.id, 'FixFold Telegram kontrolüne hoş geldin. Menüden seçim yap.', { reply_markup: menuKeyboard });
+    botInstance.sendMessage(msg.chat.id, 'FixFold Telegram kontrolüne hoş geldin. Menúden seçim yap.', { reply_markup: menuKeyboard });
   });
 
   botInstance.onText(/\/help/, (msg) => {
@@ -135,9 +136,9 @@ export function startTelegramBot() {
     if (!isAllowed(msg.chat.id)) return sendAccessDenied(msg.chat.id);
     const text = msg.text || '';
     if (text === '📊 Durum') return handleStatus(msg.chat.id);
-    if (text === '🔌 Girişler') return handleInbounds(msg.chat.id);
-    if (text === "👥 Client'lar") return handleClients(msg.chat.id);
-    if (text === '🧠 AI') return handleAI(msg.chat.id);
-    if (text === '🖥 Sunucular') return handleServers(msg.chat.id);
+    if (text === '📥 Girişler') return handleInbounds(msg.chat.id);
+    if (text === '👤 Clients') return handleClients(msg.chat.id);
+    if (text === '🤖 AI') return handleAI(msg.chat.id);
+    if (text === '🖥️ Sunucular') return handleServers(msg.chat.id);
   });
 }
