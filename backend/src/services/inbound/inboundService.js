@@ -347,7 +347,7 @@ class InboundService {
         return configBuilder.buildTrojanInbound(inbound.port, {
           ...common,
           settings: inbound.settings,
-          streamSettings: { ...stream, security: 'tls', tlsSettings: inbound.tlsSettings }
+          streamSettings: streamWithSecurity
         });
       case 'SHADOWSOCKS':
         return configBuilder.buildShadowsocksInbound(inbound.port, {
