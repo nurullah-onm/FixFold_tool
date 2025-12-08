@@ -319,6 +319,10 @@ class InboundService {
       if (sockopt.tproxy !== undefined) {
         sockopt.tproxy = normalizeTproxy(sockopt.tproxy);
       }
+      if (sockopt.mark !== undefined && sockopt.mark !== null && sockopt.mark !== '') {
+        const parsedMark = Number(sockopt.mark);
+        sockopt.mark = Number.isFinite(parsedMark) ? parsedMark : undefined;
+      }
       streamWithSecurity.sockopt = sockopt;
     }
     // WS/HTTP obfuscation (path/host)
