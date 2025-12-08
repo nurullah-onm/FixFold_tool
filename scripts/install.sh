@@ -134,6 +134,8 @@ fi
 
 # Normalize tproxy fields (Xray 25+ requires string values)
 sed -i 's/"tproxy"[[:space:]]*:[[:space:]]*true/"tproxy":"redirect"/g; s/"tproxy"[[:space:]]*:[[:space:]]*false/"tproxy":"off"/g' /etc/x-ui/config.json || true
+# Normalize sockopt mark to numeric (remove quoted marks)
+sed -i 's/"mark"[[:space:]]*:[[:space:]]*"[^"]*"/"mark":0/g' /etc/x-ui/config.json || true
 
 green "Backend bağımlılıkları kuruluyor..."
 cd "$BACKEND_DIR"
