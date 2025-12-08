@@ -55,6 +55,35 @@ if ! command -v pm2 >/dev/null 2>&1; then
   npm install -g pm2
 fi
 
+# Otomatik .env oluştur (yoksa) - sunucu IP'sine göre
+IP_ADDR=$(hostname -I | awk '{print $1}')
+BACKEND_ENV="$BACKEND_DIR/.env"
+FRONTEND_ENV="$FRONTEND_DIR/.env"
+
+if [ ! -f "$BACKEND_ENV" ]; then
+cat > "$BACKEND_ENV" <<EOF
+DATABASE_URL="file:./dev.db"
+SERVER_ADDRESS=${IP_ADDR}
+PORT=4000
+JWT_SECRET=$(openssl rand -hex 32)
+JWT_EXPIRES_IN=1d
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=200
+XRAY_BIN_PATH=/usr/local/bin/xray
+XRAY_CONFIG_PATH=/etc/x-ui/config.json
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+TELEGRAM_ADMIN_IDS=
+EOF
+fi
+
+if [ ! -f "$FRONTEND_ENV" ]; then
+cat > "$FRONTEND_ENV" <<EOF
+VITE_API_BASE=http://${IP_ADDR}:4000/api
+VITE_PANEL_TITLE=FixFold
+EOF
+fi
+
 green "Backend bağımlılıkları kuruluyor..."
 cd "$BACKEND_DIR"
 npm install
